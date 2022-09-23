@@ -15,7 +15,7 @@ public class Test1 {
 
         for(int i = 0; i<S.length();i++){
             if(Qarr[i] == Sarr[i]) {
-                Rarr[i] = "correct";
+                Rarr[i] = "P";
             }
         }
 
@@ -31,16 +31,16 @@ public class Test1 {
         for(int i = 0; i<S.length();i++){
             if(Rarr[i]==null) {
                 if(Rmap.get(Sarr[i]+"")!=null&&Rmap.get(Sarr[i]+"")>0){
-                    Rarr[i] = "present";
+                    Rarr[i] = "S";
                     Rmap.computeIfPresent(Sarr[i]+"",(f,v)-> v - 1);
                 } else {
-                    Rarr[i] = "absent";
+                    Rarr[i] = "I";
                 }
             }
         }
 
         for(int i = 0; i<S.length();i++){
-            System.out.println(Rarr[i]);
+            System.out.print(Rarr[i]);
         }
     }
 }

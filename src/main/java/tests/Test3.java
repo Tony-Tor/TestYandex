@@ -76,90 +76,137 @@ public class Test3 {
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
 
-        Map<String, Object> filters = new HashMap<>();
-        filters.put("NAME_CONTAINS", "");
-        filters.put("PRICE_GREATER_THAN", 0);
-        filters.put("PRICE_LESS_THAN",2147483647);
-        filters.put("DATE_BEFORE", LocalDate.of(2070,12,31));
-        filters.put("DATE_AFTER", LocalDate.of(1970,1,1));
+            Scanner scanner = new Scanner(System.in);
 
-        List<Product> products = new ArrayList<>();
+            Map<String, Object> filters = new HashMap<>();
+            filters.put("NAME_CONTAINS", "");
+            filters.put("PRICE_GREATER_THAN", 0);
+            filters.put("PRICE_LESS_THAN", 2147483647);
+            filters.put("DATE_BEFORE", LocalDate.of(2070, 12, 31));
+            filters.put("DATE_AFTER", LocalDate.of(1970, 1, 1));
 
-        String JSON = scanner.nextLine();
-        String line = scanner.nextLine();
-        int k = 1;
-        while (!line.equals("")){
+            List<Product> products = new ArrayList<>();
 
-            if(k==5)break;
-            String[] data = line.split("\\s+");
-            //System.out.println(data[0]);
-            //System.out.println(data[1]);
-            switch (data[0]){
-                case "NAME_CONTAINS": {
-                    filters.put("NAME_CONTAINS", data[1]);
-                    break;
+            String JSON = scanner.nextLine();
+            String line = scanner.nextLine();
+            int k = 1;
+            while (!line.equals("")) {
+
+                if (k == 5) break;
+                String[] data = line.split("\\s+");
+                //System.out.println(data[0]);
+                //System.out.println(data[1]);
+                switch (data[0]) {
+                    case "NAME_CONTAINS": {
+                        try {
+                            filters.put("NAME_CONTAINS", data[1]);
+                        } catch (Exception e){
+                            filters.put("NAME_CONTAINS", "");
+                        }
+                        break;
+                    }
+                    case "PRICE_GREATER_THAN": {
+                        try {
+                            filters.put("PRICE_GREATER_THAN", Integer.valueOf(data[1]));
+                        } catch (Exception e){
+                            filters.put("PRICE_GREATER_THAN", 0);
+                        }
+
+                        break;
+                    }
+                    case "PRICE_LESS_THAN": {
+                        try {
+                            filters.put("PRICE_LESS_THAN", Integer.valueOf(data[1]));
+                        } catch (Exception e) {
+                            filters.put("PRICE_LESS_THAN", 2147483647);
+                        }
+                        break;
+                    }
+                    case "DATE_BEFORE": {
+                        try {
+                            filters.put("DATE_BEFORE", LocalDate.parse(data[1], DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+                        } catch (Exception e) {
+                            filters.put("DATE_BEFORE", LocalDate.of(2070, 12, 31));
+                        }
+                        break;
+                    }
+                    case "DATE_AFTER": {
+                        try {
+                            filters.put("DATE_AFTER", LocalDate.parse(data[1], DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+                        } catch (Exception e){
+                            filters.put("DATE_AFTER", LocalDate.of(1970, 1, 1));
+                        }
+                        break;
+                    }
                 }
-                case "PRICE_GREATER_THAN": {
-                    filters.put("PRICE_GREATER_THAN", Integer.valueOf(data[1]));
-                    break;
+                try {
+                    line = scanner.nextLine();
+                } catch (NoSuchElementException e) {
+
                 }
-                case "PRICE_LESS_THAN": {
-                    filters.put("PRICE_LESS_THAN", Integer.valueOf(data[1]));
-                    break;
-                }
-                case "DATE_BEFORE": {
-                    filters.put("DATE_BEFORE", LocalDate.parse(data[1],DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-                    break;
-                }
-                case "DATE_AFTER": {
-                    filters.put("DATE_AFTER", LocalDate.parse(data[1],DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-                    break;
-                }
+                k++;
             }
+                JSONArray jsonArray;
             try {
-                line = scanner.nextLine();
-            } catch (NoSuchElementException e) {
+                jsonArray = (JSONArray) JSONValue.parse(JSON);
+            } catch (Exception e){
+                jsonArray = (JSONArray) JSONValue.parse("[]");
+            }
+
+
+            if(jsonArray!=null){
+            for (int i = 0; i < jsonArray.size(); i++) {
+                try {
+                    JSONObject data = (JSONObject) jsonArray.get(i);
+                //System.out.println(data);
+
+                    long id = (Long) data.get("id");
+                    String name = (String) data.get("name");
+                    long price = (Long) data.get("price");
+                    LocalDate date = LocalDate.parse((String) data.get("date"), DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+
+                    Product product = new Product(id, name, price, date);
+                    products.add(product);
+                } catch (Exception e) {
+
+                }
 
             }
-            k++;
-        }
+            }
 
-        JSONArray jsonArray = (JSONArray) JSONValue.parse(JSON);
+            products = products.stream().filter(product -> {
 
-        for(int i = 0; i < jsonArray.size(); i++){
-            JSONObject data = (JSONObject) jsonArray.get(i);
-            //System.out.println(data);
-            long id = (Long) data.get("id");
-            String name = (String) data.get("name");
-            long price = (Long)data.get("price");
-            LocalDate date = LocalDate.parse((String) data.get("date"),DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+                String str = ((String) filters.get("NAME_CONTAINS")).toLowerCase();
+                int minPrice = (Integer) filters.get("PRICE_GREATER_THAN");
+                int maxPrice = (Integer) filters.get("PRICE_LESS_THAN");
+                LocalDate beforeDate = (LocalDate) filters.get("DATE_BEFORE");
+                LocalDate afterDate = (LocalDate) filters.get("DATE_AFTER");
 
-            Product product = new Product(id,name,price,date);
-            products.add(product);
-        }
+                if (!product.name.toLowerCase().contains(str)) {
+                    return false;
+                }
+                if (product.price > maxPrice || product.price < minPrice) {
+                    return false;
+                }
+                if (!(product.date.isBefore(beforeDate.plusDays(1)) && product.date.isAfter(afterDate.minusDays(1)))) {
+                    return false;
+                }
+                return true;
+            }).sorted(Comparator.comparing(o -> o.getId())).collect(Collectors.toList());
 
-        products = products.stream().filter(product -> {
+            System.out.print("[");
+            try {
+                System.out.print(products.get(0));
+            } catch (IndexOutOfBoundsException e) {
 
-            String str = ((String)filters.get("NAME_CONTAINS")).toLowerCase();
-            int minPrice = (Integer)filters.get("PRICE_GREATER_THAN");
-            int maxPrice = (Integer)filters.get("PRICE_LESS_THAN");
-            LocalDate beforeDate = (LocalDate) filters.get("DATE_BEFORE");
-            LocalDate afterDate = (LocalDate) filters.get("DATE_AFTER");
+            }
 
-            if(!product.name.toLowerCase().contains(str)){return false;}
-            if(product.price>maxPrice||product.price<minPrice){return false;}
-            if(!(product.date.isBefore(beforeDate)&&product.date.isAfter(afterDate))){return false;}
-            return true;
-        }).collect(Collectors.toList());
 
-        System.out.print("[" + products.get(0));
+            for (int i = 1; i < products.size(); i++) {
+                System.out.print("," + products.get(i));
+            }
 
-        for(int i = 1; i < products.size(); i++){
-            System.out.print(","+products.get(i));
-        }
-
-        System.out.println("]");
+            System.out.println("]");
     }
 }

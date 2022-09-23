@@ -79,10 +79,10 @@ public class Test4 {
     }
 
     static char testPos(Point t, Point s){
-        if(t.x>s.x)return 'D';
-        if(t.x<s.x)return 'U';
-        if(t.y>s.y)return 'R';
-        return 'L';
+        if(t.x>s.x)return 'U';
+        if(t.x<s.x)return 'D';
+        if(t.y>s.y)return 'L';
+        return 'R';
     }
 
     private static List<Point> neighbors(Point point){
